@@ -1,0 +1,92 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
+
+const connectDB = require('./config/db');
+
+const app = express();
+
+// Connect to MongoDB
+connectDB();
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+// Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'http://localhost:3000'], // Allow frontend origins
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use('/api/', limiter); // Apply rate limiting to API routes
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
+// Routes
+app.use('/api/posts', require('./routes/posts'));
+app.use('/api/projects', require('./routes/projects'));
+app.use('/api/contact', require('./routes/contact'));
+app.use('/api/auth', require('./routes/auth'));
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Whipsaw Clone Backend API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err.stack);
+
+  // Mongoose validation error
+  if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map(e => e.message);
+    return res.status(400).json({ message: 'Validation Error', errors });
+  }
+
+  // Mongoose duplicate key error
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    return res.status(400).json({ message: `${field} already exists` });
+  }
+
+  // JWT error
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+
+  // JWT expired error
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({ message: 'Token expired' });
+  }
+
+  res.status(500).json({ message: 'Something went wrong!' });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Whipsaw Clone Backend Server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📝 API Documentation:`);
+  console.log(`   POST /api/auth/login - Admin login`);
+  console.log(`   GET  /api/posts - Get all blog posts`);
+  console.log(`   POST /api/posts - Create new post (admin only)`);
+  console.log(`   POST /api/contact - Send contact email`);
+});
