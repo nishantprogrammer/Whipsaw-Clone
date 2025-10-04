@@ -5,7 +5,7 @@ import { authAPI, postAPI, projectAPI } from '../utils/api';
 import Toast from '../components/common/Toast';
 import ConfirmationModal from '../components/common/ConfirmationModal';
 
-const PostForm = ({ onSuccess, editingPost = null, isEditing = false, showToast }) => {
+const PostForm = ({ onSuccess, editingPost = null, isEditing = false, showToast, baseImgURL }) => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -224,7 +224,7 @@ const PostForm = ({ onSuccess, editingPost = null, isEditing = false, showToast 
               <label className="block text-sm font-medium text-white mb-2">Image Preview</label>
               <div className="relative inline-block">
                 <img
-                  src={`http://localhost:5000${uploadedImageUrl}`}
+                  src={`${baseImgURL}${uploadedImageUrl}`}
                   alt="Uploaded blog image"
                   className="max-w-full h-32 object-cover rounded-lg border border-gray-700"
                 />
@@ -316,7 +316,7 @@ const PostForm = ({ onSuccess, editingPost = null, isEditing = false, showToast 
   );
 };
 
-const ProjectForm = ({ onSuccess, editingProject = null, isEditing = false, showToast }) => {
+const ProjectForm = ({ onSuccess, editingProject = null, isEditing = false, showToast, baseImgURL }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -610,7 +610,7 @@ const ProjectForm = ({ onSuccess, editingProject = null, isEditing = false, show
             <div className="mb-4">
               <div className="relative inline-block">
                 <img
-                  src={`http://localhost:5000${uploadedImageUrl}`}
+                  src={`${baseImgURL}${uploadedImageUrl}`}
                   alt="Uploaded project image"
                   className="max-w-full h-32 object-cover rounded-lg border border-gray-700"
                 />
@@ -694,6 +694,7 @@ const ProjectForm = ({ onSuccess, editingProject = null, isEditing = false, show
 };
 
 const AdminPage = () => {
+  const baseImgURL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [posts, setPosts] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -1089,7 +1090,7 @@ const AdminPage = () => {
             className="bg-gray-900 p-8 rounded-xl border border-gray-800"
           >
             <h2 className="text-2xl font-bold text-white mb-6">Create New Post</h2>
-            <PostForm onSuccess={fetchPosts} showToast={showToast} />
+            <PostForm onSuccess={fetchPosts} showToast={showToast} baseImgURL={baseImgURL} />
           </motion.div>
         )}
 
@@ -1196,7 +1197,7 @@ const AdminPage = () => {
             className="bg-gray-900 p-8 rounded-xl border border-gray-800"
           >
             <h2 className="text-2xl font-bold text-white mb-6">Create New Project</h2>
-            <ProjectForm onSuccess={fetchProjects} showToast={showToast} />
+            <ProjectForm onSuccess={fetchProjects} showToast={showToast} baseImgURL={baseImgURL} />
           </motion.div>
         )}
 
@@ -1229,6 +1230,7 @@ const AdminPage = () => {
                 fetchPosts();
               }}
               showToast={showToast}
+              baseImgURL={baseImgURL}
             />
           </motion.div>
         )}
@@ -1262,6 +1264,7 @@ const AdminPage = () => {
                 setActiveTab('projects');
                 fetchProjects();
               }}
+              baseImgURL={baseImgURL}
             />
           </motion.div>
         )}
