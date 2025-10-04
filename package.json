@@ -1,0 +1,14 @@
+{
+  "name": "whipsaw-clone",
+  "version": "1.0.0",
+  "description": "Full-stack Whipsaw clone portfolio website",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "cd whipsaw-clone-frontend && npm install && cd ../whipsaw-clone-backend && npm install",
+    "build": "cd whipsaw-clone-frontend && npm run build",
+    "start": "cd whipsaw-clone-backend && npm start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
