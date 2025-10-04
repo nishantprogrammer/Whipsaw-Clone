@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
@@ -79,9 +80,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, '../whipsaw-clone-frontend/dist')));
+
+// Catch all handler: send back React's index.html file for any non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../whipsaw-clone-frontend/dist/index.html'));
 });
 
 const createAdminIfNeeded = async () => {
