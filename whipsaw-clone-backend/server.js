@@ -53,7 +53,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Error handling middleware
+// Serve static files from the React app build directory
+const frontendPath = path.join(__dirname, '../whipsaw-clone-frontend/dist');
+console.log('Serving frontend from:', frontendPath);
+console.log('Frontend files available:', require('fs').existsSync(frontendPath));
+app.use(express.static(frontendPath));
+
+// Error handling middleware (must be before catch-all)
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
 
@@ -82,15 +88,43 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Serve static files from the React app build directory
-const frontendPath = path.join(__dirname, '../whipsaw-clone-frontend/dist');
-console.log('Serving frontend from:', frontendPath);
-app.use(express.static(frontendPath));
-
 // Catch all handler: send back React's index.html file for any non-API routes
 app.get('*', (req, res) => {
+  // Skip API routes - they should have been handled above
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ message: 'API endpoint not found' });
+  }
+
   const indexPath = path.join(frontendPath, 'index.html');
   console.log('Serving index.html from:', indexPath);
+  console.log('Index file exists:', require('fs').existsSync(indexPath));
+
+  // Check if index.html exists, if not return a simple HTML response
+  if (!require('fs').existsSync(indexPath)) {
+    console.error('Frontend build not found at:', indexPath);
+    return res.status(404).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Whipsaw Clone - Deployment Error</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #000; color: #fff; }
+            .error { background: #ff0000; color: white; padding: 20px; border-radius: 10px; margin: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>🚫 Deployment Error</h1>
+          <div class="error">
+            <h2>Frontend build files not found!</h2>
+            <p>The React application has not been built properly.</p>
+            <p>Please check the build process and ensure frontend files are deployed.</p>
+          </div>
+          <p><strong>Expected path:</strong> ${indexPath}</p>
+        </body>
+      </html>
+    `);
+  }
+
   res.sendFile(indexPath);
 });
 
