@@ -2,11 +2,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
+const User = require('./models/User');
 
 const app = express();
+
+// Trust proxy for Render
+app.set('trust proxy', 1);
 
 // Connect to MongoDB
 connectDB();
@@ -79,9 +84,27 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
+const createAdminIfNeeded = async () => {
+  try {
+    const adminUser = await User.findOne({ username: process.env.ADMIN_USERNAME });
+    if (!adminUser) {
+      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+      await User.create({
+        username: process.env.ADMIN_USERNAME,
+        password: hashedPassword
+      });
+      console.log(`✅ Admin user '${process.env.ADMIN_USERNAME}' created successfully`);
+    } else {
+      console.log(`ℹ️ Admin user '${process.env.ADMIN_USERNAME}' already exists`);
+    }
+  } catch (error) {
+    console.error('❌ Error creating admin user:', error);
+  }
+};
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Whipsaw Clone Backend Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`📝 API Documentation:`);
@@ -89,4 +112,7 @@ app.listen(PORT, () => {
   console.log(`   GET  /api/posts - Get all blog posts`);
   console.log(`   POST /api/posts - Create new post (admin only)`);
   console.log(`   POST /api/contact - Send contact email`);
+
+  // Create admin user if not exists
+  await createAdminIfNeeded();
 });
