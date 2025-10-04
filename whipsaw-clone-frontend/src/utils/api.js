@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ export const postAPI = {
   // Upload image
   uploadImage: (formData) => {
     return axios.create({
-      baseURL: 'http://localhost:5000/api',
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
       timeout: 15000,
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -95,7 +95,7 @@ export const projectAPI = {
   // Upload project image
   uploadImage: (formData) => {
     return axios.create({
-      baseURL: 'http://localhost:5000/api',
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
       timeout: 15000,
       headers: {
         'Content-Type': 'multipart/form-data',
