@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "install:all": "cd whipsaw-clone-frontend && npm install && cd ../whipsaw-clone-backend && npm install",
-    "build": "cd whipsaw-clone-frontend && npm run build",
+    "build": "cd whipsaw-clone-frontend && npm install && cd whipsaw-clone-frontend && npm run build",
+    "deploy": "npm run install:all && npm run build",
     "start": "cd whipsaw-clone-backend && npm start"
   },
   "keywords": [],
