@@ -28,8 +28,23 @@ const limiter = rateLimit({
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'http://localhost:3000'], // Allow frontend origins
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',')
+      : ['http://localhost:5173', 'http://localhost:3000'];
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -37,6 +52,26 @@ app.use('/api/', limiter); // Apply rate limiting to API routes
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
+
+// Handle preflight requests for all API routes
+app.options('/api/*', cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',')
+      : ['http://localhost:5173', 'http://localhost:3000'];
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 // Routes
 app.use('/api/posts', require('./routes/posts'));
@@ -57,6 +92,8 @@ app.get('/api/health', (req, res) => {
 const frontendPath = path.join(__dirname, '../whipsaw-clone-frontend/dist');
 console.log('Serving frontend from:', frontendPath);
 console.log('Frontend files available:', require('fs').existsSync(frontendPath));
+
+// Serve static files from the React app build directory
 app.use(express.static(frontendPath));
 
 // Error handling middleware (must be before catch-all)
@@ -137,12 +174,12 @@ const createAdminIfNeeded = async () => {
         username: process.env.ADMIN_USERNAME,
         password: hashedPassword
       });
-      console.log(`✅ Admin user '${process.env.ADMIN_USERNAME}' created successfully`);
+      console.log(` Admin user '${process.env.ADMIN_USERNAME}' created successfully`);
     } else {
-      console.log(`ℹ️ Admin user '${process.env.ADMIN_USERNAME}' already exists`);
+      console.log(`ℹ Admin user '${process.env.ADMIN_USERNAME}' already exists`);
     }
   } catch (error) {
-    console.error('❌ Error creating admin user:', error);
+    console.error(' Error creating admin user:', error);
   }
 };
 
