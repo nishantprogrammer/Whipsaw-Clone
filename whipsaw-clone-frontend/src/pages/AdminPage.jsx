@@ -727,10 +727,19 @@ const AdminPage = () => {
 
   const checkAuthStatus = async () => {
     try {
+      // Check if we have a token first
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
       await authAPI.verifyToken();
       setIsAuthenticated(true);
       await Promise.all([fetchPosts(), fetchProjects()]);
     } catch (error) {
+      console.log('Auth check failed:', error);
       setIsAuthenticated(false);
     } finally {
       setLoading(false);

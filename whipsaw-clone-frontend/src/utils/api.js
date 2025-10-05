@@ -27,14 +27,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const currentPath = window.location.pathname;
-      if (currentPath !== '/admin') {
-        localStorage.removeItem('token');
+      // Clear invalid token
+      localStorage.removeItem('token');
+
+      // Only redirect if not already on admin page
+      if (window.location.pathname !== '/admin') {
         window.location.href = '/admin';
-      } else {
-        localStorage.removeItem('token');
-        window.location.reload();
       }
+      // If already on admin page, just continue (let component handle it)
     }
     return Promise.reject(error);
   }
@@ -67,6 +67,7 @@ export const postAPI = {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
+      withCredentials: true,
     }).post('/posts/upload-image', formData);
   },
 };
@@ -102,6 +103,7 @@ export const projectAPI = {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
+      withCredentials: true,
     }).post('/projects/upload-image', formData);
   },
 };
