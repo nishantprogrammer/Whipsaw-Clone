@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
-  timeout: 10000,
+  timeout: 30000, // Increased from 10s to 30s for Render cold starts
   headers: {
     'Content-Type': 'application/json',
   },
@@ -62,7 +62,7 @@ export const postAPI = {
   uploadImage: (formData) => {
     return axios.create({
       baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
-      timeout: 15000,
+      timeout: 45000, // Increased for image uploads
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -98,7 +98,7 @@ export const projectAPI = {
   uploadImage: (formData) => {
     return axios.create({
       baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
-      timeout: 15000,
+      timeout: 45000, // Increased for image uploads
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
